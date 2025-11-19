@@ -1,0 +1,577 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI 특허 명세서 (Toss Style)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* [Core Variables] */
+        :root {
+            --toss-blue: #3182f6;
+            --toss-blue-dark: #1b64da;
+            --toss-bg: #F2F4F6;
+            --toss-white: #FFFFFF;
+            --text-primary: #191F28;
+            --text-secondary: #4E5968;
+            --text-tertiary: #8B95A1;
+            --text-placeholder: #B0B8C1;
+            --input-bg: #F9FAFB;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --error-red: #ff3b30;
+            --warning-orange: #FF9500;
+        }
+
+        /* [Reset & Base] */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--toss-bg);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        /* [Mobile Container] */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--toss-bg);
+            min-height: 100vh;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        /* [Navbar] */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: rgba(242, 244, 246, 0.9);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 20px; font-weight: 900; color: var(--toss-blue); letter-spacing: -0.5px; }
+        .profile-icon { 
+            width: 32px; height: 32px; 
+            background: white; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* [Layout Utils] */
+        .px-5 { padding-left: 20px; padding-right: 20px; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-4 { margin-top: 16px; }
+        .mt-6 { margin-top: 24px; }
+        
+        /* [Typography] */
+        h1 { font-size: 26px; font-weight: 700; line-height: 1.35; color: var(--text-primary); margin-bottom: 8px; }
+        h1 span { color: var(--toss-blue); }
+        .subtitle { font-size: 15px; color: var(--text-tertiary); line-height: 1.5; }
+        .label { display: block; font-size: 13px; font-weight: 700; color: var(--text-tertiary); margin-bottom: 6px; padding-left: 4px; }
+
+        /* [Components] */
+        .card {
+            background: var(--toss-white);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+        }
+
+        .input-group { margin-bottom: 20px; }
+        .input-group:last-child { margin-bottom: 0; }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            border: 2px solid transparent;
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-family: inherit;
+            transition: all 0.2s;
+            outline: none;
+            resize: none;
+        }
+        .input-field::placeholder { color: var(--text-placeholder); }
+        .input-field:focus {
+            background-color: var(--toss-white);
+            border-color: var(--toss-blue); 
+            box-shadow: 0 0 0 2px rgba(49, 130, 246, 0.1);
+        }
+
+        /* [Buttons] */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 18px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s ease, background-color 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .btn:active { transform: scale(0.96); }
+        
+        .btn-primary {
+            background-color: var(--toss-blue);
+            color: white;
+            box-shadow: 0 4px 12px rgba(49, 130, 246, 0.3);
+        }
+        .btn-secondary {
+            background-color: #E8F3FF;
+            color: var(--toss-blue);
+        }
+        /* Warning state for retrying */
+        .btn.retrying {
+            background-color: var(--warning-orange);
+            color: white;
+        }
+        .btn-icon { margin-right: 6px; font-size: 18px; }
+
+        /* [Results Area] */
+        .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+        .result-title { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+        .btn-mini {
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: white;
+            border: 1px solid #E5E8EB;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        .doc-content h2 { font-size: 1.15rem; font-weight: 700; margin: 24px 0 12px 0; border-bottom: 2px solid #f2f4f6; padding-bottom: 8px; }
+        .doc-content h3 { font-size: 1rem; font-weight: 600; color: #333D4B; margin: 20px 0 8px 0; }
+        .doc-content p { font-size: 0.95rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 10px; text-align: justify; word-break: keep-all; }
+        .doc-content ul { padding-left: 20px; margin-bottom: 12px; }
+        .doc-content li { font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 4px; }
+
+        /* [Advanced Buttons Grid] */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .action-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .action-card:active { transform: scale(0.98); }
+        .action-card-icon { font-size: 24px; margin-bottom: 8px; display: block; }
+        .action-card-title { font-size: 15px; font-weight: 700; color: #333D4B; line-height: 1.3; }
+        .bg-deco {
+            position: absolute; right: -10px; top: -10px;
+            width: 60px; height: 60px; border-radius: 50%;
+            opacity: 0.5; z-index: 0;
+        }
+
+        /* [Animations] */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-enter { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+
+        /* [Loaders] */
+        .spinner {
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+        .spinner-blue { border-color: rgba(49, 130, 246, 0.2); border-top-color: var(--toss-blue); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* [Toast] */
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85); color: white;
+            padding: 14px 24px; border-radius: 50px;
+            font-size: 14px; font-weight: 600;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            z-index: 1000; display: none; align-items: center;
+            white-space: nowrap; transition: opacity 0.3s;
+        }
+        .toast.show { display: flex; animation: slideUp 0.3s forwards; }
+        .toast.error { background: var(--error-red); }
+        
+        .hidden { display: none; }
+        .svg-icon { width: 20px; height: 20px; stroke-width: 2; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Toast Message -->
+        <div id="toast" class="toast">
+            <span>내용을 모두 입력해주세요</span>
+        </div>
+
+        <!-- Top Navigation -->
+        <nav class="navbar">
+            <span class="logo">하이뷰랩 특허명세서 프로그램</span>
+            <div class="profile-icon">
+                <svg class="svg-icon" style="width: 20px; height: 20px; color: #B0B8C1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            </div>
+        </nav>
+
+        <main class="px-5 mt-4">
+            
+            <!-- Intro Header -->
+            <div class="mb-4 animate-enter">
+                <h1>특허 명세서,<br><span>AI</span>가 작성해드릴게요</h1>
+                <p class="subtitle">복잡한 양식은 잊으세요.<br>아이디어만 있으면 충분합니다.</p>
+            </div>
+
+            <!-- Main Input Form -->
+            <div class="card animate-enter delay-1">
+                <div class="input-group">
+                    <label class="label">발명의 명칭</label>
+                    <input type="text" id="title" class="input-field" placeholder="예: 소음 제거 스마트 베개">
+                </div>
+
+                <div class="input-group">
+                    <label class="label">해결하려는 문제</label>
+                    <textarea id="problem" rows="3" class="input-field" placeholder="어떤 불편함이 있나요?"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label class="label">핵심 해결 방안</label>
+                    <textarea id="solution" rows="3" class="input-field" placeholder="어떤 기술로 해결하나요?"></textarea>
+                </div>
+            </div>
+
+            <!-- Refine Button -->
+            <div class="animate-enter delay-2">
+                <button id="btn-refine" class="btn btn-secondary">
+                    <span class="btn-icon">✨</span> 아이디어 다듬기
+                </button>
+            </div>
+
+            <!-- Generate Button (Sticky-like) -->
+            <div class="mt-4 animate-enter delay-2">
+                <button id="btn-generate" class="btn btn-primary">
+                    명세서 생성하기
+                </button>
+            </div>
+
+            <!-- Result Area -->
+            <div id="result-area" class="mt-6 hidden" style="padding-bottom: 40px;">
+                
+                <div class="result-header">
+                    <span class="result-title">생성된 명세서</span>
+                    <button id="btn-copy" class="btn-mini">복사</button>
+                </div>
+
+                <div class="card animate-enter" style="position: relative; overflow: hidden;">
+                    <div style="position: absolute; top:0; left:0; width:100%; height:6px; background: linear-gradient(90deg, #3182f6, #1b64da);"></div>
+                    <div id="doc-content" class="doc-content">
+                        <!-- Content will be injected -->
+                    </div>
+                </div>
+
+                <!-- Tools Grid -->
+                <div class="grid-2 animate-enter">
+                    <div id="btn-expand" class="action-card">
+                        <div class="bg-deco" style="background: #E8F3FF;"></div>
+                        <span class="action-card-icon">⚖️</span>
+                        <span class="action-card-title" style="color: #3182f6;">청구항<br>확장하기</span>
+                    </div>
+                    <div id="btn-keywords" class="action-card">
+                        <div class="bg-deco" style="background: #E0F2F1;"></div>
+                        <span class="action-card-icon">🔍</span>
+                        <span class="action-card-title" style="color: #00BFA5;">검색어<br>추천받기</span>
+                    </div>
+                </div>
+
+                <!-- Extra Results -->
+                <div id="extra-result-area" class="mt-4"></div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // UI References
+            const ui = {
+                title: document.getElementById('title'),
+                problem: document.getElementById('problem'),
+                solution: document.getElementById('solution'),
+                toast: document.getElementById('toast'),
+                
+                btnRefine: document.getElementById('btn-refine'),
+                btnGenerate: document.getElementById('btn-generate'),
+                btnCopy: document.getElementById('btn-copy'),
+                btnExpand: document.getElementById('btn-expand'),
+                btnKeywords: document.getElementById('btn-keywords'),
+                
+                resultArea: document.getElementById('result-area'),
+                docContent: document.getElementById('doc-content'),
+                extraArea: document.getElementById('extra-result-area')
+            };
+
+            let generatedTextCache = "";
+            // Note: Using the specific API key requested. 
+            // If 503 persists, it is a server-side capacity issue with the Gemini API itself.
+            const API_KEY = "AIzaSyDkp3cHJdUxo7idI1tXPTze9bE1kT0kvc8"; 
+
+            // Utility Functions
+            function showToast(message, isError = false) {
+                const span = ui.toast.querySelector('span');
+                span.textContent = message;
+                
+                if (isError) ui.toast.classList.add('error');
+                else ui.toast.classList.remove('error');
+
+                ui.toast.classList.add('show');
+                setTimeout(() => {
+                    ui.toast.classList.remove('show');
+                }, 3000);
+            }
+
+            function validate() {
+                const isValid = ui.title.value.trim() && ui.problem.value.trim() && ui.solution.value.trim();
+                if (!isValid) showToast("내용을 모두 입력해주세요", true);
+                return isValid;
+            }
+
+            function setLoading(btn, isLoading, text, isBlueLoader = false) {
+                if (isLoading) {
+                    btn.dataset.original = btn.innerHTML;
+                    btn.style.opacity = "0.9";
+                    btn.style.pointerEvents = "none";
+                    const spinnerClass = isBlueLoader ? "spinner spinner-blue" : "spinner";
+                    btn.innerHTML = `<div class="${spinnerClass}"></div> ${text}`;
+                } else {
+                    btn.style.opacity = "1";
+                    btn.style.pointerEvents = "auto";
+                    btn.innerHTML = btn.dataset.original;
+                    btn.classList.remove('retrying'); // Remove retry warning color
+                }
+            }
+
+            // Update button text for retries
+            function updateLoadingText(btn, text, isRetrying = false) {
+                const spinner = btn.querySelector('.spinner');
+                if (spinner) {
+                    btn.innerHTML = ''; 
+                    btn.appendChild(spinner);
+                    btn.appendChild(document.createTextNode(` ${text}`));
+                    if (isRetrying) btn.classList.add('retrying');
+                }
+            }
+
+            function formatMarkdown(text) {
+                if (!text) return "";
+                return text.split('\n').map(line => {
+                    line = line.trim();
+                    if (!line) return "";
+                    line = line.replace(/\*\*/g, ""); 
+                    if (line.startsWith('【') && line.endsWith('】')) {
+                        if (line.includes('과제') || line.includes('수단') || line.includes('효과')) {
+                            return `<h3>${line}</h3>`;
+                        }
+                        return `<h2>${line}</h2>`;
+                    } else if (line.match(/^[-*]\s/) || line.match(/^\d+\.\s/)) {
+                        return `<ul><li>${line.replace(/^[-*]\s|^\d+\.\s/, '')}</li></ul>`;
+                    }
+                    return `<p>${line}</p>`;
+                }).join('');
+            }
+
+            function addCard(title, content, color = "#3182f6") {
+                const card = document.createElement('div');
+                card.className = 'card animate-enter mt-4';
+                card.innerHTML = `
+                    <h3 style="font-size:16px; font-weight:700; color:${color}; margin-bottom:16px; padding-bottom:8px; border-bottom:1px solid #f2f4f6;">${title}</h3>
+                    <div class="doc-content">${formatMarkdown(content)}</div>
+                `;
+                ui.extraArea.prepend(card);
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            // Smart Retry API Handler
+            async function callGemini(sysPrompt, userPrompt, btnElement) {
+                // Increased max retries to 7 for severe outages
+                const maxRetries = 7; 
+                let delay = 1000; // Start with 1s
+
+                for (let i = 0; i < maxRetries; i++) {
+                    try {
+                        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                contents: [{ parts: [{ text: userPrompt }] }],
+                                systemInstruction: { parts: [{ text: sysPrompt }] },
+                                generationConfig: { temperature: 0.7 }
+                            })
+                        });
+
+                        // 503 or 429: Server Busy / Rate Limit
+                        if (res.status === 503 || res.status === 429) {
+                            throw new Error("Server Busy");
+                        }
+
+                        const data = await res.json();
+
+                        if (!res.ok) {
+                            if (data.error && (data.error.code === 503 || data.error.status === 'UNAVAILABLE')) {
+                                throw new Error("Server Busy");
+                            }
+                            // Fatal Error
+                            throw new Error(data.error?.message || "API Error");
+                        }
+
+                        return data.candidates[0].content.parts[0].text;
+
+                    } catch (err) {
+                        // Check if retryable
+                        const isBusy = err.message.includes("Busy") || err.message.includes("503") || err.message.includes("Failed to fetch");
+                        
+                        if (i < maxRetries - 1 && isBusy) {
+                            // Update UI to show patience
+                            const attempt = i + 1;
+                            updateLoadingText(btnElement, `서버 혼잡.. 재시도 중 (${attempt}/${maxRetries})`, true);
+                            
+                            console.warn(`Attempt ${attempt} failed. Retrying in ${delay}ms...`);
+                            await new Promise(r => setTimeout(r, delay));
+                            
+                            // Exponential Backoff: 1s -> 3s -> 6s -> 10s...
+                            delay += (attempt * 1000); 
+                            continue;
+                        }
+
+                        // Final Failure
+                        console.error("Final Error:", err);
+                        showToast("Google 서버 사용량이 많습니다. 1분 뒤 다시 시도해주세요.", true);
+                        return null;
+                    }
+                }
+            }
+
+            // Event Listeners
+            
+            // 1. Refine Idea
+            ui.btnRefine.addEventListener('click', async () => {
+                if (!validate()) return;
+                setLoading(ui.btnRefine, true, "다듬는 중", true);
+
+                const sys = `You are an expert consultant. Refine the idea into JSON (Korean): {"title": "...", "problem": "...", "solution": "..."}`;
+                const user = `Title: ${ui.title.value}\nProblem: ${ui.problem.value}\nSolution: ${ui.solution.value}`;
+                
+                const res = await callGemini(sys, user, ui.btnRefine);
+                if (res) {
+                    try {
+                        const jsonStr = res.replace(/```json|```/g, '').trim();
+                        const json = JSON.parse(jsonStr);
+                        ui.title.value = json.title;
+                        ui.problem.value = json.problem;
+                        ui.solution.value = json.solution;
+                        
+                        [ui.title, ui.problem, ui.solution].forEach(el => {
+                            el.style.backgroundColor = "#E8F3FF";
+                            setTimeout(() => el.style.backgroundColor = "", 600);
+                        });
+                    } catch(e) {}
+                }
+                setLoading(ui.btnRefine, false);
+            });
+
+            // 2. Generate
+            ui.btnGenerate.addEventListener('click', async () => {
+                if (!validate()) return;
+                setLoading(ui.btnGenerate, true, "명세서 작성 중...");
+                
+                const sys = `You are a Korean patent attorney. Draft specification: 【발명의 명칭】, 【기술분야】, 【배경기술】, 【발명의 내용】, 【청구범위】(claim 1), 【요약】. Plain text.`;
+                const user = `Draft for:\nTitle: ${ui.title.value}\nProblem: ${ui.problem.value}\nSolution: ${ui.solution.value}`;
+
+                const res = await callGemini(sys, user, ui.btnGenerate);
+                if (res) {
+                    generatedTextCache = res;
+                    ui.docContent.innerHTML = formatMarkdown(res);
+                    ui.resultArea.classList.remove('hidden');
+                    setTimeout(() => ui.resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                }
+                setLoading(ui.btnGenerate, false);
+            });
+
+            // 3. Expand Claims
+            ui.btnExpand.addEventListener('click', async () => {
+                if (!generatedTextCache) return showToast("명세서를 먼저 생성해주세요", true);
+                
+                // Manual Div Loading State
+                const originalHTML = ui.btnExpand.innerHTML;
+                ui.btnExpand.style.pointerEvents = 'none';
+                ui.btnExpand.style.opacity = "0.8";
+                ui.btnExpand.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px;"><div class="spinner spinner-blue"></div><div style="font-size:13px; margin-top:10px; color:#3182f6; font-weight:bold;">확장 중...</div></div>`;
+                
+                const res = await callGemini("Draft dependent claims (2-5).", `Original:\n${generatedTextCache}`, { innerHTML: '' }); // Mockbtn
+                if (res) addCard("확장된 청구항", res);
+                
+                ui.btnExpand.innerHTML = originalHTML;
+                ui.btnExpand.style.pointerEvents = 'auto';
+                ui.btnExpand.style.opacity = "1";
+            });
+
+            // 4. Keywords
+            ui.btnKeywords.addEventListener('click', async () => {
+                if (!validate()) return;
+                
+                const originalHTML = ui.btnKeywords.innerHTML;
+                ui.btnKeywords.style.pointerEvents = 'none';
+                ui.btnKeywords.style.opacity = "0.8";
+                ui.btnKeywords.innerHTML = `<div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; padding:20px;"><div class="spinner spinner-blue" style="border-top-color:#00BFA5;"></div><div style="font-size:13px; margin-top:10px; color:#00BFA5; font-weight:bold;">분석 중...</div></div>`;
+
+                const res = await callGemini("Recommend Korean/English keywords & CPC codes.", `Idea:\n${ui.title.value}\n${ui.solution.value}`, { innerHTML: '' });
+                if (res) addCard("추천 검색어", res, "#00BFA5");
+
+                ui.btnKeywords.innerHTML = originalHTML;
+                ui.btnKeywords.style.pointerEvents = 'auto';
+                ui.btnKeywords.style.opacity = "1";
+            });
+
+            // Copy
+            ui.btnCopy.addEventListener('click', () => {
+                navigator.clipboard.writeText(ui.docContent.innerText).then(() => {
+                    const originalText = ui.btnCopy.textContent;
+                    ui.btnCopy.textContent = "완료";
+                    ui.btnCopy.style.color = "#3182f6";
+                    setTimeout(() => {
+                        ui.btnCopy.textContent = originalText;
+                        ui.btnCopy.style.color = "";
+                    }, 1500);
+                });
+            });
+
+        });
+    </script>
+</body>
+</html>
